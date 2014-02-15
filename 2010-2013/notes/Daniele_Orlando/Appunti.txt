@@ -1,0 +1,489 @@
+* Nomenclatura
+        vertex <-> nodo
+        edge   <-> arco
+        trasversale <-> vertex-cover
+
+        G = (V, E)
+        V = nodi di G
+        E = archi di G
+
+        𝛼(G) = stable_max(G) = stable massimo
+        𝜇(G) = matching_max(G) = matching massimo
+        𝜌(G) = edge-cover_min(G) = edge-cover minimo [rho]
+        𝜏(G) = vertex-cover_min(G) = vertex-cover minimo [tau]
+
+        z^{H}(DT) è il valore che si ottiene applicando l'euristica Double Tree.
+        z^{H}(CH) è il valore che si ottiene applicando l'euristica di Christofides.
+
+
+* Introduzione ai grafi
+        * Grado di un nodo
+                Con grado di un nodo si intende il numero di archi incidenti sul nodo; questo può quindi essere o pari o dispari.
+
+
+        * Foresta
+                Si definisce foresta un grafo non orientato privo di cicli.
+
+
+        * Multigrafo
+                [2:34]
+                Un multigrafo è un grafo con ripetizione di archi.
+
+
+        * Cammino alternante
+                Un arco si definisce accoppiato se appartiene al matching, altrimenti si definisce libero.
+                Un nodo si definisce accoppiato se vi incide un arco del matching; altrimenti si definisce esposto.
+                Un cammino su di un grafo si definisce alternante se è composto alternativamente da archi accoppiati e liberi.
+
+
+        * Cammino aumentante
+                [1:55]
+                [1:64]
+
+
+        * Nodo raggiungibile
+                ???
+
+
+        * Grafo bipartito
+                Per la definizione di grafo bipartito vedere qui:
+                http://it.wikipedia.org/wiki/Grafo_bipartito
+
+                [e1:13]
+                Per verificare se è bipartito possiamo bicolorare il grafo.
+
+                [4:33]
+                Un grafo è bipartito se e solo se la sua matrice di incidenza è totalmente unimodulare.
+
+
+        * Grafo euleriano
+                [2:34]
+                Un multigrafo è euleriano se è possibile costruire un ciclo che inizia e finisce nello stesso vertice e che attraversa ogni arco esattamente una volta.
+                Ovvero, un multigrafo è euleriano se è connesso e tutti i nodi hanno grado pari.
+
+
+        * 1-albero
+                [2:7]
+                [4:37,38]
+                Un 1-albero è un grafo composto da  due archi adiacenti al nodo 1 più gli archi di un albero ricoprente i nodi {2, ..., n}.
+
+                L'1-albero è un rilassamento per il TSP.
+
+                [e2:1-9]
+                Per calcolare un 1-albero:
+                1) si esclude il nodo 1 dal grafo;
+                2) si calcola un minimo albero ricoprente (tramite Kruskal o Prim);
+                3) si reintroduce il nodo 1 e si connettono i due archi di costo minimo uscenti da tale nodo.
+
+
+        * 2-abbinamento
+                [2:10]
+                Un 2-abbinamento è un insieme di archi tale che ogni nodo è estremo di esattamente due archi.
+
+                Un 2-abbinamento è un rilassamento per il TSP.
+
+
+        * Ciclo hamiltoniano (TSP)
+                [2:8]
+                Un ciclo hamiltoniano è un ciclo che tocca tutti i nodi del grafo una sola volta
+                ed è un particolare 1-albero ed un particolare 2-abbinamento.
+
+                [2:41]
+                Per ricavare un ciclo hamiltoniano da uno euleriano:
+                - si salva il tour euleriano;
+                - si connettono i nodi nell'ordine seguito dal tour euleriano;
+                - una volta connesso un nodo si seleziona il successivo nel tour euleriano;
+                - se questo è già stato connesso lo si salta e si seleziona il successivo;
+                - quando si trova un nodo non connesso si connette questo con l'ultimo connesso o, se si esauriscono i nodi, si connette l'ultimo connesso con il primo nodo del tour hamiltoniano;
+                - si seleziona il successivo;
+                - al termine tutti i nodi devono avere grado pari.
+
+
+        * Disuguaglianza triangolare
+                [2:33]
+                Un grafo soddisfa la disuguaglianza triangolare se per ogni terna di nodi i, j, k distinti, il costo di (i,j) + il costo di (j,k) ≥ del costo di (i,k).
+
+
+* Stable, matching e coperture
+        * Stable (aka vertici indipendenti)
+                Uno stable è un insieme di nodi due a due non adiacenti.
+                Può essere massimo o massimale.
+
+                [1:89]
+                Lo stable è subclusivo.
+
+
+        * Matching
+                Un matching è un insieme di archi due a due non adiacenti.
+                Può essere massimo o massimale.
+
+                [1:89]
+                Il matching è subclusivo.
+                Il matching perfetto non è subclusivo.
+
+
+                * Matching perfetto
+                        Se il numero di elementi che compongono il matching è uguale a |V|/2 allora questo è perfetto.
+
+
+                * Cammino aumentante
+                        Si ciclano i nodi esposti rispetto al matching corrente:
+                        .... # Cerca un cammino aumentante sul nodo
+                        .... Si annullano le label di tutto il grafo;
+                        .... Si marca il nodo PARI e lo si inserisce nella lista vuota;
+                        .... Si cicla la lista finché è piena e TROVATO è falso:
+                        ........ Si prende un nodo dalla lista;
+                        ........ Se è pari:
+                        ............ # esplora_pari()
+                        ............ Si ciclano i figli del nodo finché TROVATO è falso:
+                        ................ Se il figlio non appartiene al matching:
+                        .................... TROVATO è vero;
+                        ................ Altrimenti se non ha etichetta:
+                        .................... Lo si marca DISPARI;
+                        .................... Lo si aggiunge alla lista;
+                        ........ Altrimenti:
+                        ............ # esplora_dispari()
+                        ............ Si prende il nodo accoppiato al nodo corrente nel matching;
+                        ............ Se non ha etichetta:
+                        ................ Lo si marca PARI;
+                        ................ Lo si aggiunge alla lista;
+                        .... Se il cammino aumentante è trovato allora aumenta il matching;
+                        .... altrimenti elimina il nodo dal grafo.
+
+                        Il cammino aumentante è dato da tutti i nodi attraversati tra quello di partenza e quello trovato (inclusi).
+                        L’aggiornamento del matching M rispetto al cammino aumentante P è dato da:
+                        M = (M – P) ∪ (P – M)
+
+                        Mostrare almeno una volta la procedura esplora pari ed esplora dispari.
+                        Non sono richiesti tutti i passaggi dell'esplorazione su tutti i nodi e archi.
+
+
+        * Teorema di Berge
+                [1:59]
+                Un matching è massimo se e solo se il grafo non ammette cammini aumentanti rispetto al matching.
+
+
+        * Vertex-cover
+                Un vertex-cover è un insieme di nodi S tali che ogni arco di G incide su almeno un nodo di S.
+                Può essere minimo o minimale.
+                Il vertex-cover è un insieme di nodi che verificano una proprietà sugli archi.
+
+
+                * Minimo vertex-cover
+                        [e1:21]
+                        1) Bicolorabile quindi bipartito?;
+                        2) Calcolare il matching massimo;
+                        3) Dividere i nodi in partizioni:
+                           X1 = nodi saturi rispetto al matching (ovvero i nodi pari del matching);
+                           X2 = X - X1 (ovvero i nodi pari non del matching);
+                           Y1 = nodi raggiungibili da X2;
+                           Y2 = Y - Y1;
+                           ===
+                           Se il matching massimo è perfetto allora:
+                           X1 = X; X2 = Y1 = ∅; Y2 = Y;
+                        [e1:38]
+                        4) Prendere i nodi:
+                           - degli archi-del-matching (X1,Y1) che appartengono ad Y1
+                           - degli archi-del-matching (X1,Y2) che appartengono ad X1.
+                        5) Verificare che il vertex-cover lo sia veramente.
+
+
+        * Edge-cover
+                Un edge-cover è un insieme di archi S tali che ogni nodo di G incide su almeno un arco di S.
+                Può essere minimo o minimale.
+                L'edge-cover è un insieme di archi che verificano una proprietà sui nodi.
+
+
+        * Disuguaglianze duali deboli
+                [1:38]
+                stable_max(G) ≤ edge-cover_min(G)
+                matching_max(G) ≤ vertex-cover_min(G)
+
+
+        * Teorema di Gallai
+                [1:44]
+                stable_max(G) + vertex-cover_min(G) = |V|
+                matching_max(G) + edge-cover_min(G) = |V| se non ha nodi isolati.
+
+
+        * Teorema di Konig
+                [1:78]
+                matching_max(G) = vertex-cover_min(G) se G è un grafo bipartito.
+
+                Il contrario non è sempre vero; ovvero se il matching massimo è uguale al vertex-cover minimo, non è detto che il grafo sia bipartito.
+
+
+        * Massimale e minimale
+                É massimale quando è massimo o quando è non massimo e non aumentabile.
+                É minimale quando è minimo o quando è non minimo e non diminuibile.
+
+
+        * Insiemi banali (vuoto o universo)
+                L'insieme vuoto è uno stable o un matching banale, ma non è uno stable o un matching perfetto.
+                Lo stable e il matching perfetti posseggono la proprietà di coprire tutti i nodi, l'insieme non verifica questa proprietà. In aggiunta, non esiste un sottoinsieme perfetto di uno stable e di un matching perfetti; l'insieme vuoto è un sottoinsieme di uno stable e di un matching, quindi non può essere perfetto.
+
+                L'insieme vuoto non è un vertex-cover o un edge-cover banale.
+                Differentemente dallo stable e dal matching le cui proprietà sono da verificare sugli elementi dell'insieme, nel vertex-cover e nell'edge-cover le proprietà sono da verificare sugli elementi connessi agli elementi dell'insieme.
+
+                La copertura composta da tutti i nodi/archi è una copertura banale, quindi è un vertex-cover o un edge-cover banale.
+
+
+* Problema subclusivo, proprietà di scambio e algoritmo greedy
+        * Problema subclusivo
+                [1:89]
+                Un problema si definisce subclusivo se l'insieme delle soluzioni ammissibili (che quindi rispettano una certa proprietà):
+                - contiene l'insieme vuoto;
+                - contiene un sottoinsieme di ogni soluzione ammissibile;
+
+                Ovvero, un problema si definisce subclusivo se:
+                - l'insieme vuoto è una soluzione ammissibile;
+                - e ogni sottoinsieme di una soluzione ammissibile è anch'essa una soluzione ammissibile.
+
+
+        * Proprietà di scambio
+                [1:92]
+                Sia F l'insieme delle soluzioni ammissibili ed F1,F2 ∈ F, con |F1|<|F2|.
+                F soddisfa la proprietà di scambio se è sempre possibile trovare un elemento y ∈ F2 – F1 tale che F1 ∪ {y} ∈ F.
+
+                Se F soddisfa la proprietà di scambio allora tutti i suoi insiemi massimali hanno stessa cardinalità.
+
+
+        * Matroide
+                [1:93]
+                Si definisce matroide una coppia (U, F) subclusiva che soddisfa la proprietà di scambio.
+
+                [1:96]
+                Matroide grafico.
+
+
+        * Algoritmo greedy
+                [1:89]
+                L'algoritmo greedy restituisce sempre una soluzione ammissibile se il problema è subclusivo.
+
+
+        * Teorema di Rado
+                [1:93]
+                L'algoritmo greedy determina una soluzione ottima di un problema subclusivo se e solo se l'insieme delle soluzioni ammissibili soddisfa la proprietà di scambio, ovvero è un matroide.
+
+
+* Euristiche e calcolo del ciclo hamiltoniano (TSP)
+        * Algoritmo euristico
+                [2:20]
+                Un algoritmo si definisce euristico se di un problema restituisce una soluzione ammissibile che non è garantito essere la soluzione ottima.
+
+                Un algoritmo euristico si dice k-approssimato se ha complessità polinomiale e il rapporto tra la soluzione trovata e quella ottima è minore di un certo k.
+                Se il problema è di massimo allora 0 < k < 1 e il rapporto è maggiore di k.
+
+                [2:21]
+                Le euristiche si dividono in euristiche costruttive ed euristiche migliorative (tramite miglioramenti locali).
+                [2-22]
+                Un esempio di euristica costruttiva ingenua è l'algoritmo Nearest Neighbor.
+
+                [2:26]
+                La selezione del nodo da inserire può essere effettuata tramite gli algoritmi euristici di inserimento:
+                - Nearest Insertion;
+                - Farthest Insertion;
+
+                [2:27]
+                La selezione della posizione in cui inserire il nodo consiste nella scelta dell'arco da eliminare dal ciclo.
+
+
+        * Euristica Double Tree
+                [2:39]
+                1) si calcola un minimo albero ricoprente R (tramite Kruskal o Prim);
+                2) si raddoppiano gli archi di R, formando un ciclo euleriano;
+                3) si ricava una ciclo hamiltoniano dal ciclo euleriano.
+
+                [2:42]
+                É un algoritmo 2-approssimato per il TSP.
+
+
+        * Euristica di Christofides
+                [2:43]
+                1) si calcola un minimo albero ricoprente R (tramite Kruskal o Prim);
+                2) si definisce V' come l'insieme dei vertici che hanno grado dispari in R;
+                3) si trova il matching perfetto M di peso minimo sui nodi V';
+                4) M ∪ R è un percorso euleriano;
+                5) si ricava un ciclo hamiltoniano dal percorso euleriano.
+
+                [2:45]
+                É un algoritmo 3/2-approssimato per il TSP.
+
+
+        * Bound di Held e Karp
+                [4:45-50]
+                [e4:1]
+                d_t(v) è il numero di archi dell'1-albero incidenti sul nodo.
+
+                1) si trova un ciclo hamiltoniano ammissibile qualsiasi e se ne calcola il costo definendo l'upper bound z_ub (del ciclo hamiltoniano ottimo);
+                2) si trova l'1-albero di costo minimo e se ne calcola il costo definendo il lower bound z_lb (del ciclo hamiltoniano ottimo);
+                3) per ogni nodo v tranne l'1, si calcola:
+                   c_v = 2 - d_t(v);
+                4) p = (z_ub - z_lb) / ∑(c_v)^2;
+                5) si aggiorna la matrice originale delle distanze sottraendo il valore y_v = y_v + c_v * p;
+                6) si ritrova l'1-albero di costo minimo e se il suo costo è maggiore di z_lb si aggiorna z_lb con il nuovo costo;
+                7) si ripete dal passo 3 fino al raggiungimento di z_ub o al ritrovamento di un ciclo hamiltoniano;
+                8) si conclude che il valore della soluzione ottima del TSP originario è z_ub o il costo del ciclo hamiltoniano trovato.
+
+
+* Problema del Knapsack
+        * Divide et Impera
+                [3:3]
+                Decompone la regione ammissibile in h sottoinsieme e per ognuno di essi calcola la migliore soluzione; poi delle h soluzioni prende la migliore.
+                Non è richiesto che la decomposizione sia una partizione (ovvero che Si ∩ Sj = ∅) ma non è escluso che possa esserlo.
+
+                [3:5,6]
+                Costruendo l'albero di enumerazione si enumerano tutti gli insiemi ammissibili, il che è impossibile da effettuare per la maggior parte dei problemi.
+                Conoscendo i bound primali e duali e l'upper e il lower bound possiamo escludere i nodi dell'albero che non ha senso esaminare.
+
+
+        * Algoritmo di Branch-and-Bound
+                [3:5-9]
+                La potatura può avvenire per ottimalità, bound ed inammissibilità.
+
+
+        * Programmazione dinamica
+                [3:37-39]
+                [e3:14]
+                * Calcolo di z_n(b)
+                Per r = {1, ..., n}, calcolo z_r(d) per d = {0, ..., b}.
+
+                Algoritmo:
+                z_1(d) = {
+                        0 se d < a_1;
+                        p_1 se d ≥ a_1
+                };
+                Quindi
+                x_1 = {
+                        0 se z_1(d) = 0;
+                        1 se z_1(d) = p_1
+                };
+
+                z_r(d) = {
+                        z_{r-1}(d) se d < a_r;
+                        max{z_{r-1}(d), z_{r-1}(d-a_r)+p_r } se d ≥ a_r
+                };
+                Quindi
+                x_r = {
+                        0 se z_r(d) = z_{r-1}(d);
+                        1 se z_r(d) = z_{r-1}(d - a_r) + p_r
+                };
+
+
+* Poliedri, convessità e matrici totalmente unimodulari (TUM)
+        * Convessità
+                [4:10]
+                Dati due vettori x_1,x_2 ∈ R^n e λ ∈ [0,1] si definisce combinazione convessa il vettore
+                z = λx_1 + (1–λ)x_2
+
+                [4:12]
+                Dati i vettori z,x_1,x_2,...,x_k ∈ R^n, z ∈ conv(F) se e solo se si può esprimere come
+                z = ∑[i=1, k] λ_i * x_i
+                con
+                ∑[i=1, k] λ_i = 1
+                λ_1,λ_2,...,λ_k ≥ 0
+
+
+        * Formulazione
+                [4:8]
+                Se un poliedro P1, formulazione di F, è contenuto in P2, formulazione di F, P1 è una formulazione migliore di P2.
+                P1 ⊆ P2 ⊆ P3 ...
+                [4:9,11]
+                La formulazione ideale coincide con il più piccolo poliedro contenente F ed è il poliedro conv(F).
+
+
+        * Matrice unimodulare
+                [4:9,22]
+                Una matrice intera m × n con m < n si dice unimodulare se ogni sua sottomatrice di dimensioni m × m ha det(B) = {-1, 0, +1}.
+
+                Se A è una matrice unimodulare e b è un vettore intero, il poliedro P = {x: Ax = b, x > 0} ha tutte le soluzioni di base intere.
+
+
+        * Matrice totalmente unimodulare (TUM)
+                [4:9,23]
+                Una matrice si dice totalmente unimodulare (TUM) se ogni sua sottomatrice quadrata ha determinante {-1, 0, +1}.
+                Una matrice A è TUM se e solo se
+
+                - la matrice trasposta di A è TUM;
+                - la matrice (A, I) è TUM.
+
+                [4:25]
+                Ogni matrice TUM è una matrice unimodulare.
+
+                Se una matrice intera è TUM il poliedro P_RL ha tutti i vertici interi. Quindi risolvendo il rilassamento lineare otteniamo l'ottimo per il problema intero.
+
+                [4:30]
+                La matrice di incidenza di un grafo diretto (ovvero non bipartito con cicli dispari) è TUM.
+
+                [4:33]
+                Una matrice di incidenza è totalmente unimodulare se e solo se il suo grafo è bipartito.
+
+                [4:35]
+                Se il primale è TUM, e quindi intero, anche il duale, ovvero la matrice trasposta, è TUM.
+
+
+        * Teorema di Hoffman-Kruskal
+                [4:26]
+                Sia A una matrice intera, il poliedro P definito da P = {x: Ax > b, x > 0} ha tutti i vertici interi per ogni vettore intero b se e solo se A è TUM.
+
+
+        * Criterio di sufficienza
+                Essendo condizioni sufficienti ma non necessarie:
+                - se si verificano tutte le seguenti condizioni allora la matrice è per certo TUM;
+                - se non si verificano la matrice può comunque essere TUM.
+
+                [4:27]
+                A è TUM se:
+                1) a_ij ∈ {-1, 0, 1};
+                2) ogni colonna ha al più due coefficienti non nulli;
+                3) esiste una partizione (M1, M2) dell’insieme delle righe M tale che ogni colonna j contenente due coefficienti non nulli soddisfa ∑{i ∈ M1} a_ij = ∑{i ∈ M2} a_ij:
+                   - se la colonna j contiene due elementi a_ij ≠ 0 e a_kj ≠ 0 dello stesso segno allora i ∈ M1 e k ∈ M2;
+                   - se la colonna j contiene due elementi a_ij ≠ 0 e a_kj ≠ 0 di segno opposto allora i,k ∈ M1 oppure i,k ∈ M2.
+
+                Ovvero
+                A è TUM se:
+                1) i coefficienti sono "0", "1" o "-1";
+                2) ogni colonna ha massimo due coefficienti diversi da "0";
+                3) l’insieme delle righe di può essere suddiviso in due sottoinsiemi M1 e M2 tali che se una colonna contiene due elementi diversi da "0" si ha che:
+                   - se i due elementi hanno lo stesso segno allora una delle due righe in cui si trovano è in M1 e l'altra in M2;
+                   - se i due elementi hanno segno opposto le righe corrispondenti sono entrambe contenute in M1 od entrambe in M2.
+
+                * Corollario
+                        Se nelle colonne con due elementi diversi da "0" la somma di tali elementi è uguale a "0" (ovvero un elemento
+                        è uguale a "1" e l’altro a "-1") allora A è TUM.
+
+
+* Rilassamento, bound e dualità
+        * Rilassamento
+                [2:6]
+                Rilassando un problema di massimo si ottiene un upper bound.
+                Rilassando un problema di minimo si ottiene un lower bound.
+
+                [2:18]
+                I lower e upper bound devono avere le se seguenti caratteristiche:
+                - si ottengono tramite la soluzione di un problema di ottimizzazione combinatoria;
+                - hanno complessità polinomiale.
+
+
+        * Bound primale
+                Un bound primale è una soluzione ammissibile di buona qualità.
+
+
+        * Dualità
+                [2:58]
+
+                Con
+                z = max{f(x) | x ∈ X}
+                w = min{g(y) | y ∈ Y}
+
+                I bound duali ottenuti tramite la teoria della dualità hanno un vantaggio fondamentale rispetto al rilassamento: per ottenere un bound attraverso il rilassamento, il problema rilassato va risolto all’ottimo; invece, per una coppia duale ogni soluzione ammissibile y ∈ Y (x ∈ X) è un upper (lower) bound per z (w).
+
+                Se f(x) ≤ g(y) i problemi formano una coppia duale debole.
+                Se f(x) = g(y) i problemi formano una coppia duale forte.
+
+                [2:63,68]
+                stable_max(G) ≤ stable_max_RL(G) ≤ edge-cover_min_RL(G) ≤ edge-cover_min(G)
+                matching_max(G) ≤ matching_max_RL(G) ≤ vertex-cover_min_RL(G) ≤ vertex-cover_min(G)
+
+                [2:69]
+                Se il grafo è bipartito godono della dualità forte (dai teoremi di Konig e Gallai).
